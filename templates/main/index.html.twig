@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<style>
+    /* Ici, on définit les couleurs de ta maquette */
+    body { background-color: #121214; color: white; font-family: sans-serif; }
+    .header { display: flex; justify-content: space-between; padding: 20px; }
+    .btn-purple { background: #6366f1; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; }
+    .import-banner { background: #1a1a1e; border: 1px dashed #333; padding: 40px; border-radius: 15px; text-align: center; margin: 20px; }
+    .album-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 20px; }
+    .album-card { background: #1a1a1e; padding: 10px; border-radius: 10px; }
+    .album-card img { width: 100%; border-radius: 8px; }
+</style>
+
+<div class="container">
+    {# 1. BARRE DE NAVIGATION #}
+    <header class="header">
+        <div class="logo"><h2>Juke-box</h2></div>
+        <div class="search"><input type="text" placeholder="Recherche..."></div>
+        <div class="auth-buttons">
+            {% if app.user %}
+                {# Si l'utilisateur est connecté #}
+                <span>Bonjour {{ app.user.userIdentifier }}</span>
+                <a href="/logout" class="btn-purple">Déconnexion</a>
+            {% else %}
+                {# Si personne n'est connecté #}
+                <a href="/login">Connexion</a>
+                <a href="/register" class="btn-purple">S'inscrire</a>
+            {% endif %}
+        </div>
+    </header>
+
+    {# 2. ZONE D'IMPORT (Bannière) #}
+    <div class="import-banner">
+        <p>Ajoutez un album, un artiste ou téléversez une image</p>
+        <a href="/album/new" class="btn-purple">Importer</a>
+    </div>
+
+    {# 3. SECTION TENDANCES (Tes données de la base) #}
+    <h3>Tendances</h3>
+    <div class="album-grid">
+        {% for album in albums %}
+            <div class="album-card">
+                <img src="{{ album.coverUrl }}" alt="Cover">
+                <h4>{{ album.title }}</h4>
+                <p>{{ album.artist.name }}</p>
+                
+                {# Seul l'admin voit le bouton supprimer #}
+                {% if is_granted('ROLE_ADMIN') %}
+                    <button style="color: red;">Supprimer</button>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
