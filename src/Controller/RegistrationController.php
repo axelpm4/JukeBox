@@ -16,8 +16,12 @@ use Symfony\Component\Routing\Attribute\Route;
 class RegistrationController extends AbstractController
 {
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager): Response
-    {
+    public function register(
+        Request $request, 
+        UserPasswordHasherInterface $userPasswordHasher, 
+        Security $security, 
+        EntityManagerInterface $entityManager
+    ): Response {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
@@ -26,14 +30,23 @@ class RegistrationController extends AbstractController
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
 
-            // encode the plain password
+            // 1. Encodage et définition du mot de passe sécurisé
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
+            // 2. Définition automatique du rôle obligatoire
+            $user->setRoles(['ROLE_USER']);
+
+            // 3. Gestion de l'username obligatoire (extrait depuis l'email avant le '@')
+            if (!$user->getUsername()) {
+                $emailParts = explode('@', $user->getEmail());
+                $user->setUsername($emailParts[0]); 
+            }
+
+            // 4. Sauvegarde dans la base de données SQL
             $entityManager->persist($user);
             $entityManager->flush();
 
-            // do anything else you need here, like send an email
-
+            // 5. Connexion automatique de l'utilisateur et redirection via l'Authenticator
             return $security->login($user, AppAuthenticator::class, 'main');
         }
 

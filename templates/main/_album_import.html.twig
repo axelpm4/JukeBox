@@ -1,0 +1,88 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<style>
+    body { background-color: #121214; color: white; font-family: sans-serif; }
+    .modal {
+        max-width: 820px;
+        margin: 40px auto;
+        background:#1a1a1e;
+        padding: 20px;
+        border-radius: 15px;
+    }
+    .field { margin-bottom: 14px; }
+    input, select, textarea {
+        width: 100%;
+        background:#121214;
+        color:#fff;
+        padding:10px;
+        border-radius:8px;
+        border: 1px solid #2a2a2a;
+        box-sizing: border-box;
+    }
+    .row { display:flex; gap: 14px; }
+    .row > * { flex: 1; }
+</style>
+
+<div class="modal">
+    <h2 style="margin-top:0;">Importer / Ajouter un album</h2>
+    <p style="opacity:0.75; margin-bottom: 18px;">On utilise <b>cover_url</b> (pas d’upload) pour éviter de surcharger la base.</p>
+
+    <form action="/album/new" method="post">
+        <div class="row">
+            <div class="field">
+                <label>Titre</label>
+                <input name="title" type="text" required placeholder="Ex: Random Access Memories" />
+            </div>
+            <div class="field">
+                <label>Date de sortie (optionnel)</label>
+                <input name="release_date" type="date" />
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Cover URL (depuis Google images)</label>
+            <input name="cover_url" type="url" required placeholder="https://..." />
+        </div>
+
+        <div class="field">
+            <label>Artiste</label>
+            <select name="artist_id" >
+                <option value="">-- Choisir (optionnel) --</option>
+                {% for artist in artists %}
+                    <option value="{{ artist.id }}">{{ artist.name }}</option>
+                {% endfor %}
+            </select>
+            <div style="opacity:0.75; font-size:12px; margin-top:8px;">
+                Ou écris un nom ci-dessous pour l’enregistrer automatiquement.
+            </div>
+            <input name="artist_name" type="text" placeholder="Ex: Daft Punk" />
+        </div>
+
+
+        <hr style="border:0; border-top:1px solid #2a2a2a; margin: 18px 0;" />
+
+        <h3 style="margin-top:0;">Laisser un avis (SQL) pour cet album</h3>
+        <div class="row">
+            <div class="field">
+                <label>Note (1-5)</label>
+                <select name="rating">
+                    {% for i in 1..5 %}
+                        <option value="{{ i }}">{{ i }}</option>
+                    {% endfor %}
+                </select>
+                <div style="opacity:0.75; font-size:12px; margin-top:8px;">Requis</div>
+                <option value="" disabled selected>Choisir une note</option>
+            </div>
+            <div class="field">
+                <label>Texte</label>
+                <textarea name="text" rows="3" placeholder="Votre avis..." required></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-purple" style="border:none; cursor:pointer; margin-top: 10px;">Créer</button>
+        <a href="/" class="btn-purple" style="display:inline-block; text-align:center; margin-left: 10px;">Retour</a>
+    </form>
+</div>
+{% endblock %}
+
