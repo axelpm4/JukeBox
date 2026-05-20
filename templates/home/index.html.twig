@@ -11,15 +11,55 @@
     .album-card { background: #1a1a1e; padding: 10px; border-radius: 10px; }
     .album-card img { width: 100%; height: 200px; object-fit: cover; border-radius: 8px; }
     
-    /* Styles du formulaire fusionné */
+    /* STYLES DE LA FENÊTRE MODALE (POP-UP) */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7); /* Fond sombre semi-transparent */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    
+    /* Classe CSS qui sera activée par JavaScript pour afficher la pop-up */
+    .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     .form-container {
         max-width: 820px;
-        margin: 40px auto;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto; /* Permet de scroller dans la pop-up si l'écran est petit */
         background: #1a1a1e;
-        padding: 20px;
+        padding: 30px;
         border-radius: 15px;
-        text-align: left; /* Aligne le texte du formulaire à gauche */
+        text-align: left;
+        position: relative;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5);
     }
+
+    .close-modal {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 24px;
+        cursor: pointer;
+        opacity: 0.7;
+    }
+    .close-modal:hover { opacity: 1; }
+
     .field { margin-bottom: 14px; }
     input, select, textarea {
         width: 100%;
@@ -55,8 +95,15 @@
         <p>Ajoutez un album, un artiste ou laissez un avis général</p>
         <p style="opacity:0.75; font-size: 14px;">On utilise <b>cover_url</b> (pas d’upload) pour éviter de surcharger la base.</p>
         
-        {# FORMULAIRE IMPLANTÉ DIRECTEMENT ICI #}
+        {# Bouton pour ouvrir la pop-up #}
+        <button id="openModalBtn" class="btn-purple" style="margin-top: 10px;">Importer un album</button>
+    </div>
+
+    {# STRUCTURE DE LA MODALE POP-UP (Masquée par défaut) #}
+    <div id="albumModal" class="modal-overlay">
         <div class="form-container">
+            <button id="closeModalBtn" class="close-modal">&times;</button>
+            
             <h2 style="margin-top:0;">Importer / Ajouter un album</h2>
             
             <form action="/album/new" method="post">
@@ -84,7 +131,7 @@
                             <option value="{{ artist.id }}">{{ artist.name }}</option>
                         {% endfor %}
                     </select>
-                    <div style="opacity:0.75; font-size:12px; margin-top:8px; mb-4">
+                    <div style="opacity:0.75; font-size:12px; margin-top:8px;">
                         Ou écris un nom ci-dessous pour l’enregistrer automatiquement.
                     </div>
                     <input name="artist_name" type="text" placeholder="Ex: Daft Punk" style="margin-top: 5px;" />
@@ -93,16 +140,16 @@
                 <hr style="border:0; border-top:1px solid #2a2a2a; margin: 18px 0;" />
 
                 <h3 style="margin-top:0;">Laisser un avis (SQL) pour cet album</h3>
-              <div class="row">
+                <div class="row">
                     <div class="field">
-                 <label>Note (1-5)</label>
-                     <select name="rating" required>
-                        <option value="" disabled selected>Choisir une note</option>
-                {% for i in 1..5 %}
-                    <option value="{{ i }}">{{ i }}</option>
-                 {% endfor %}
-              </select>
-        </div>
+                        <label>Note (1-5)</label>
+                        <select name="rating" required>
+                            <option value="" disabled selected>Choisir une note</option>
+                            {% for i in 1..5 %}
+                                <option value="{{ i }}">{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                     <div class="field">
                         <label>Texte</label>
                         <textarea name="text" rows="3" placeholder="Votre avis..." required></textarea>
@@ -115,7 +162,7 @@
     </div>
 
     {# 3. SECTION TENDANCES #}
-    <h3 style="margin-left: 20px;">Tendances</h3>
+    <h3 style="margin-left: 20px;">Avis récent</h3>
     <div class="album-grid">
         {% for album in albums %}
             <div class="album-card">
@@ -131,4 +178,28 @@
         {% endfor %}
     </div>
 </div>
+
+{# SCRIPT JAVASCRIPT POUR GERER L'OUVERTURE ET FERMETURE #}
+<script>
+    const modal = document.getElementById('albumModal');
+    const openBtn = document.getElementById('openModalBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+
+    // Ouvrir la pop-up quand on clique sur "Importer un album"
+    openBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+    });
+
+    // Fermer la pop-up quand on clique sur la petite croix (x)
+    closeBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+
+    // Fermer également la pop-up si on clique n'importe où sur le fond noir à l'extérieur du formulaire
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+</script>
 {% endblock %}
