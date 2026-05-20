@@ -17,14 +17,12 @@ final class AlbumController extends AbstractController
     #[Route('/album/new', name: 'app_album_new', methods: ['POST'])]
     public function new(Request $request, ArtistRepository $artistRepository, EntityManagerInterface $em): Response
     {
-        // 1. Vérifier si l'utilisateur est connecté (requis pour lier l'avis/review SQL)
         $user = $this->getUser();
         if (!$user) {
             $this->addFlash('error', 'Vous devez être connecté pour ajouter un album.');
             return $this->redirectToRoute('app_home');
         }
 
-        // 2. Récupération des données brutes du formulaire HTML
         $title = $request->request->get('title');
         $releaseDateStr = $request->request->get('release_date');
         $coverUrl = $request->request->get('cover_url');
@@ -39,12 +37,10 @@ final class AlbumController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        // 3. Gestion de l'Artiste (soit sélectionné, soit créé à la volée)
         $artist = null;
         if (!empty($artistId)) {
             $artist = $artistRepository->find($artistId);
         } elseif (!empty($artistName)) {
-            // Si l'artiste n'existe pas, on le crée
             $artist = new Artist();
             $artist->setName($artistName);
             $em->persist($artist);
@@ -55,7 +51,6 @@ final class AlbumController extends AbstractController
             return $this->redirectToRoute('app_home');
         }
 
-        // 4. Création et hydratation de l'entité Album
         $album = new Album();
         $album->setTitle($title);
         $album->setCoverUrl($coverUrl);
@@ -67,23 +62,33 @@ final class AlbumController extends AbstractController
 
         $em->persist($album);
 
-        // 5. Création automatique de la Review (avis SQL lié)
         if ($reviewText && $rating) {
             $review = new Review();
             $review->setText($reviewText);
             $review->setRating((float) $rating);
             $review->setCreatedAt(new \DateTimeImmutable());
-            $review->setUser($user); // Lie l'utilisateur SQL connecté
-            $review->setAlbum($album); // Lie le nouvel album créé juste au-dessus
+            $review->setUser($user);
+            $review->setAlbum($album);
 
             $em->persist($review);
         }
 
-        // 6. Sauvegarde finale globale en BDD SQL
         $em->flush();
 
         $this->addFlash('success', 'L\'album et votre avis ont été ajoutés avec succès !');
 
         return $this->redirectToRoute('app_home');
+    }
+
+    // AJOUT DE LA ROUTE DE CONSULTATION DE L'ALBUM
+    #[Route('/album/{id}', name: 'app_album_show', methods: ['GET'])]
+    public function show(Album $album): Response
+    {
+        // Sécurité supplémentaire : empêche de tricher via l'URL si pas connecté
+        $this->denyAccessUnlessGranted('ROLE_USER');
+
+        return $this->render('album/show.html.twig', [
+            'album' => $album,
+        ]);
     }
 }
