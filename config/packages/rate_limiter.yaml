@@ -1,0 +1,8 @@
+# config/packages/rate_limiter.yaml
+framework:
+    rate_limiter:
+        # Cette configuration est automatiquement lue par le 'login_throttling' du security.yaml
+        login:
+            policy: 'fixed_window'
+            limit: 3                 # Blocage après 3 échecs
+            interval: '15 minutes'   # Durée du bannissement temporaire
